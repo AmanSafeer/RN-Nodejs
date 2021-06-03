@@ -33,6 +33,19 @@ app.post('/send_messages', (req, res) => {
         })
 })
 
+app.post('/send_multi_messages', (req, res) => {
+    console.log("multi post request", req.body)
+    messagesCollection.insertMany(req.body)
+        .then(result => {
+            console.log(result)
+            res.send({ message: "Message has been added" })
+        })
+        .catch(error => {
+            console.log(error)
+            return error
+        })
+})
+
 app.get('/get_messages', (req, res) => {
     messagesCollection.find().toArray()
         .then(result => {
@@ -68,9 +81,24 @@ app.put("/update_messages", (req, res) => {
 
 app.delete("/delete_messages", (req, res) => {
     console.log("delete request", req.body)
+    // res.status(400).send({message:"Invalid data"})
     messagesCollection.deleteOne(
         { _id: MongoDB.ObjectId(req.body._id) }
     )
+        .then(result => {
+            console.log(console.log("Messages", result))
+            res.send({ message: "Messages has been deleted" })
+        })
+        .catch(error => {
+            console.log("error", error)
+            return error
+        })
+})
+
+app.delete("/delete_multi_messages", (req, res) => {
+    console.log("multi delete request", req.body)
+    let idArr = req.body.map(val => MongoDB.ObjectId(val._id))
+    messagesCollection.deleteMany({ _id: { $in: idArr } })
         .then(result => {
             console.log(console.log("Messages", result))
             res.send({ message: "Messages has been deleted" })
