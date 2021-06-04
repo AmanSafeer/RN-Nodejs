@@ -43,8 +43,9 @@ const App = () => {
           setName('')
           setMessage('')
           getMessages()
+          updateMultiMessage()
         })
-        .catch(err => console.log("error", err))
+        .catch(err => console.log(err.response))
     }
     else alert("Please enter details")
   }
@@ -55,7 +56,16 @@ const App = () => {
         console.log("get response", res)
         setMessages(res.data)
       })
-      .catch(err => console.log(err))
+      .catch(err => console.log(err.response))
+  }
+
+  const getFilteredMessages = () => {
+    Axios.get('http://192.168.18.232:3000/get_filtered_messages', { params: { name: "Aman" } })
+      .then(res => {
+        console.log("get response", res)
+        setMessages(res.data)
+      })
+      .catch(err => console.log(err.response))
   }
 
   const editMessage = (item) => {
@@ -79,7 +89,24 @@ const App = () => {
         setEdit(false)
         getMessages()
       })
-      .catch(err => console.log("error", err))
+      .catch(err => console.log(err.response))
+  }
+
+  const updateMultiMessage = () => {
+    const payload = { type: "new" }
+    Axios.put(
+      "http://192.168.18.232:3000/update_multi_messages",
+      payload,
+      { headers: { 'Content-Type': 'application/json' } }
+    )
+      .then(res => {
+        console.log("update response", res)
+        setName('')
+        setMessage('')
+        setEdit(false)
+        getMessages()
+      })
+      .catch(err => console.log(err.response))
   }
 
   const deleteMessage = (_id) => {
@@ -91,7 +118,7 @@ const App = () => {
         console.log("delete response", res)
         getMessages()
       })
-      .catch(err => console.log("error", err))
+      .catch(err => console.log(err.response))
   }
 
   const deleteMultiMessage = () => {
@@ -104,7 +131,7 @@ const App = () => {
         getMessages()
         setSelected([])
       })
-      .catch(err => console.log("error", err))
+      .catch(err => console.log(err.response))
   }
 
   const multiSelect = (_id) => {
@@ -123,18 +150,18 @@ const App = () => {
       <View style={{ flex: 1, padding: 20 }}>
         <TextInput placeholder="Name" value={name} onChangeText={setName} style={{ borderWidth: 1, padding: 10 }} />
         <TextInput placeholder="Message" value={message} onChangeText={setMessage} style={{ borderWidth: 1, padding: 10, marginTop: 5 }} />
-        <View style={{ flexDirection: "row", justifyContent:"center"}}>
+        <View style={{ flexDirection: "row", justifyContent: "center" }}>
           {!edit ?
-            <TouchableOpacity onPress={sendMessage} style={{ marginVertical: 15, padding: 10,  backgroundColor: "lightgray" }}>
+            <TouchableOpacity onPress={sendMessage} style={{ marginVertical: 15, padding: 10, backgroundColor: "lightgray" }}>
               <Text>Send</Text>
             </TouchableOpacity>
             :
-            <TouchableOpacity onPress={updateMessage} style={{ marginVertical: 15, padding: 10,  backgroundColor: "lightgray" }}>
+            <TouchableOpacity onPress={updateMessage} style={{ marginVertical: 15, padding: 10, backgroundColor: "lightgray" }}>
               <Text>Update</Text>
             </TouchableOpacity>
           }
           {selected.length ?
-            <TouchableOpacity onPress={deleteMultiMessage} style={{ marginVertical: 15, padding: 10,  backgroundColor: "lightgray" }}>
+            <TouchableOpacity onPress={deleteMultiMessage} style={{ marginVertical: 15, padding: 10, backgroundColor: "lightgray" }}>
               <Text>Delete</Text>
             </TouchableOpacity>
             : null
@@ -165,6 +192,16 @@ const App = () => {
               </View>
             )
           }}
+          ListHeaderComponent={
+            <View style={{ flexDirection: "row", justifyContent: "center" }}>
+              <TouchableOpacity onPress={getMessages} style={{ marginVertical: 10, padding: 10, backgroundColor: "white" }}>
+                <Text>All</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={getFilteredMessages} style={{ marginVertical: 10, padding: 10, backgroundColor: "white" }}>
+                <Text>Filtered</Text>
+              </TouchableOpacity>
+            </View>
+          }
         />
 
       </View>
