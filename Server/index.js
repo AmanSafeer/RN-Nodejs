@@ -2,14 +2,18 @@ const express = require('express');
 const app = express();
 const MongoDB = require('mongodb')
 const jwt = require("jwt-encode");
-var bcrypt = require("bcrypt");
+const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
+const path = require("path")
+const multer = require('multer')
+const PORT = 3000
 
 const dotenv = require('dotenv')
 dotenv.config({ path: "./config/config.env" })
 
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json());
+app.use(express.static(path.join(__dirname, '/public')));
 
 let Users;
 MongoDB.MongoClient.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.rmqbj.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`, {
@@ -23,6 +27,22 @@ MongoDB.MongoClient.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.
     .catch((err) => {
         return console.error(err)
     })
+
+// let AuthDB
+// mongoose.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.rmqbj.mongodb.net/Auth?retryWrites=true&w=majority`, {
+//     useNewUrlParser: true,
+// })
+// console.log('Connected to Database')
+//     .then((Auth) => {
+//         AuthDB = Auth
+//     })
+//     .catch((err) => {
+//         return console.error(err)
+//     })
+
+// const AuthSchema = AuthDB.Schema
+// const UsersSchema = new AuthSchema({})
+// const Users = mongoose.model('Users', UsersSchema);
 
 
 let testAccount;
@@ -62,11 +82,15 @@ const Transport = async () => {
 
 }
 
-app.post("/signup", async (req, res) => {
+const upload = multer({ dest: './public/images' })
+app.post("/signup", upload.single("image"), async (req, res) => {
     try {
         const { name, email, password, confirmPassword } = req.body
         if (name && email && password && confirmPassword) {
             if (password == confirmPassword) {
+                if (req.file.filename) {
+                    console.log(`http://localhost:3000/images/${req.file.filename}`)
+                }
                 const userExist = await Users.findOne({ email })
                 if (userExist) {
                     return res.status(400).send({ error: "User already exists" })
@@ -190,10 +214,64 @@ app.post("/login", async (req, res) => {
         }
     }
     catch (err) {
+        console.log(err)
         return res.status(400).send({ error: err.message })
     }
 })
 
-app.listen(3000, function () {
-    console.log('listening on 3000')
+app.post("/update_profile", async (req, res) => {
+    try {
+        const { username } = req.body
+        const { _id, access_token } = req.headers
+        if (_id && access_token) {
+            const user = await Users.findOne({ _id: MongoDB.ObjectId(_id) })
+            if (user.token == access_token) {
+                const updateUser = await Users.updateOne(
+                    { _id: MongoDB.ObjectId(_id) },
+                    { $set: { username } }
+                )
+                if (updateUser.result.ok) {
+                    res.send({ message: "Profile has been updated" })
+                }
+            }
+            else {
+                return res.status(401).send({ error: "Unauthenticated" })
+            }
+        }
+        else {
+            return res.status(400).send({ error: "Invalid headers" })
+        }
+    }
+    catch (err) {
+        return res.status(400).send({ error: err.message })
+    }
+})
+
+app.get("/get_profile", async (req, res) => {
+    try {
+        const { _id, access_token } = req.headers
+        if (_id && access_token) {
+            const user = await Users.findOne({ _id: MongoDB.ObjectId(_id) })
+            if (user.token == access_token) {
+                res.send({
+                    _id: user._id,
+                    email: user.email,
+                    username: user.username,
+                })
+            }
+            else {
+                return res.status(401).send({ error: "Unauthenticated" })
+            }
+        }
+        else {
+            return res.status(400).send({ error: "Invalid headers" })
+        }
+    }
+    catch (err) {
+        return res.status(400).send({ error: err.message })
+    }
+})
+
+app.listen(PORT, function () {
+    console.log('listening on ' + PORT)
 })
