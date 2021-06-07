@@ -1,154 +1,198 @@
 const express = require('express');
 const app = express();
 const MongoDB = require('mongodb')
-const dotenv = require('dotenv')
-dotenv.config({ path: './config.env' })
+const jwt = require("jwt-encode");
+var bcrypt = require("bcrypt");
+const nodemailer = require("nodemailer");
 
-const connectionString = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.rmqbj.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`
+const dotenv = require('dotenv')
+dotenv.config({ path: "./config/config.env" })
 
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json());
 
-let messagesDb, messagesCollection;
-
-MongoDB.MongoClient.connect(connectionString, {
+let Users;
+MongoDB.MongoClient.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.rmqbj.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`, {
     useUnifiedTopology: true
 })
     .then((client) => {
-        messagesDb = client.db("Users")
-        messagesCollection = messagesDb.collection("Messages")
+        const AuthDb = client.db("Auth")
+        Users = AuthDb.collection("Users")
         console.log('Connected to Database')
     })
     .catch((err) => {
         return console.error(err)
     })
 
-app.post('/send_messages', (req, res) => {
-    console.log("post request", req.body)
-    // res.status(400).send({ error: { message: "Invalid data" } });
-    messagesCollection.insertOne(req.body)
-        .then(result => {
-            console.log(result)
-            res.send({ message: "Message has been added" })
-        })
-        .catch(error => {
-            console.log(error)
-            return error
-        })
-})
 
-app.post('/send_multi_messages', (req, res) => {
-    console.log("multi post request", req.body)
-    messagesCollection.insertMany(req.body)
-        .then(result => {
-            console.log(result)
-            res.send({ message: "Message has been added" })
-        })
-        .catch(error => {
-            console.log(error)
-            return error
-        })
-})
-
-app.get('/get_messages', (req, res) => {
-    messagesCollection.find().toArray()
-        .then(result => {
-            console.log("Messages", result)
-            res.send(result)
-        })
-        .catch(error => {
-            console.log(error)
-            return error
-        })
-})
-
-app.get('/get_filtered_messages', (req, res) => {
-    console.log("data", req.query)
-   messagesCollection.find({ name: req.query.name }).toArray()
-    .then(result => {
-        console.log("Messages", result)
-        res.send(result)
+let testAccount;
+nodemailer.createTestAccount()
+    .then((account) => {
+        testAccount = account
+        console.log("user", testAccount.user)
+        console.log("pass", testAccount.pass)
     })
-    .catch(error => {
-        console.log(error)
-        return error
-    })
-})
 
-app.put("/update_messages", (req, res) => {
-    console.log("put request", req.body)
-    messagesCollection.updateOne(
-        { _id: MongoDB.ObjectId(req.body._id) },
-        {
-            $set: {
-                name: req.body.name,
-                message: req.body.message
+const Transport = async () => {
+    try {
+        let transport = await nodemailer.createTransport(
+            {
+                host: "smtp.ethereal.email",
+                // host: 'smtp.gmail.com',
+                // service: "Gmail",
+                auth: {
+                    type: "login",
+                    user: testAccount.user,
+                    pass: testAccount.pass,
+                    // type: "OAuth2",
+                    // user: process.env.USER,
+                    // pass: process.env.PASS,
+                    // clientId: process.env.CLIENTID,
+                    // clientSecret: process.env.CLIENTSECRET,
+                    // refreshToken: process.env.REFRESHTOKEN,
+                    // accessToken: process.env.ACCESSTOKEN
+                },
+            }
+        )
+        return transport
+    }
+    catch (err) {
+        console.log("transport err", err)
+    }
+
+}
+
+app.post("/signup", async (req, res) => {
+    try {
+        const { name, email, password, confirmPassword } = req.body
+        if (name && email && password && confirmPassword) {
+            if (password == confirmPassword) {
+                const userExist = await Users.findOne({ email })
+                if (userExist) {
+                    return res.status(400).send({ error: "User already exists" })
+                }
+                else {
+                    const passHash = bcrypt.hashSync(password, 8)
+                    const verification_code = Math.random().toString().slice(-6)
+                    const transport = await Transport()
+                    const mailSent = await transport.sendMail({
+                        from: testAccount.user,
+                        to: email,
+                        subject: "Please verify your email",
+                        html: `
+                            <h2>Confirmation code:</h2>
+                            <h1>${verification_code}<h1/>
+                            `
+                    })
+                    if (mailSent.messageId) {
+                        const response = await Users.insertOne({
+                            username: name,
+                            email,
+                            password: passHash,
+                            verification_code,
+                            verified: false
+                        })
+                        console.log("response", response.result.ok)
+                        if (response.result.ok) {
+                            res.send({
+                                message: "Verfication code has been sent."
+                            })
+                        }
+                    }
+                }
+            }
+            else {
+                return res.status(400).send({ error: "Password does not match" })
             }
         }
-    )
-        .then(result => {
-            console.log(console.log("Messages", result))
-            res.send({ message: "Messages has been updated" })
-        })
-        .catch(error => {
-            console.log("error", error)
-            return error
-        })
+        else {
+            return res.status(400).send({ error: "Please fill all required fields" })
+        }
+    }
+    catch (err) {
+        return res.status(400).send({ error: err.message })
+    }
 })
 
-app.put("/update_multi_messages", (req, res) => {
-    console.log("multi put request", req.body)
-    messagesCollection.updateMany(
-        { message: "Hello" },
-        {
-            $set: {
-                type: req.body.type
+app.post("/verify_code", async (req, res) => {
+    try {
+        const { email, code } = req.body
+        if (email && code) {
+            const user = await Users.findOne({ email })
+            if (user.verification_code == code) {
+                const updateUser = await Users.updateOne(
+                    { email },
+                    {
+                        $set: {
+                            verification_code: "",
+                            verified: true
+                        }
+                    }
+                )
+                console.log("update", updateUser.result.ok)
+                if (updateUser.result.ok) {
+                    res.send({
+                        message: "Account has been verfied"
+                    })
+                }
+
+            }
+            else {
+                return res.status(400).send({ error: "Invalid code" })
             }
         }
-    )
-        .then(result => {
-            console.log(console.log("Messages", result))
-            res.send({ message: "Messages has been updated" })
-        })
-        .catch(error => {
-            console.log("error", error)
-            return error
-        })
+        else {
+            return res.status(400).send({ error: "Invalid data" })
+        }
+    }
+    catch (err) {
+        return res.status(400).send({ error: err.message })
+    }
 })
 
-app.delete("/delete_messages", (req, res) => {
-    console.log("delete request", req.body)
 
-    messagesCollection.deleteOne(
-        { _id: MongoDB.ObjectId(req.body._id) }
-    )
-        .then(result => {
-            console.log(console.log("Messages", result))
-            res.send({ message: "Messages has been deleted" })
-        })
-        .catch(error => {
-            console.log("error", error)
-            return error
-        })
+app.post("/login", async (req, res) => {
+    try {
+        const { email, password } = req.body
+        if (email && password) {
+            const user = await Users.findOne({ email })
+            if (user) {
+                if (user.verified) {
+                    const comparePass = bcrypt.compareSync(password, user.password)
+                    if (comparePass) {
+                        const token = jwt({ email }, process.env.SECRET)
+                        const updateToken = await Users.updateOne(
+                            { email },
+                            { $set: { token } }
+                        )
+                        console.log("updatetoken", updateToken.result)
+                        res.status(200).send({
+                            email: user.email,
+                            username: user.username,
+                            _id: user._id,
+                            token
+                        })
+                    }
+                    else {
+                        return res.status(400).send({ error: "Invalid Password" })
+                    }
+                }
+                else {
+                    return res.status(401).send({ error: "User not verified" })
+                }
+            }
+            else {
+                return res.status(404).send({ error: "User not found" })
+            }
+        }
+        else {
+            return res.status(400).send({ error: "Please fill all required fields" })
+        }
+    }
+    catch (err) {
+        return res.status(400).send({ error: err.message })
+    }
 })
-
-app.delete("/delete_multi_messages", (req, res) => {
-    console.log("multi delete request", req.body)
-    let idArr = req.body.map(val => MongoDB.ObjectId(val._id))
-    messagesCollection.deleteMany({ _id: { $in: idArr } })
-        .then(result => {
-            console.log(console.log("Messages", result))
-            res.send({ message: "Messages has been deleted" })
-        })
-        .catch(error => {
-            console.log("error", error)
-            return error
-        })
-})
-
-// app.get('/', (req, res) => {
-//     res.sendFile(__dirname + '/index.html')
-// })
 
 app.listen(3000, function () {
     console.log('listening on 3000')
