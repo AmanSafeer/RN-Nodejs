@@ -55,11 +55,9 @@ class SignUp extends Component {
         const { navigation: { navigate } } = this.props
 
         const formData = new FormData()
-        if (image.uri) {
-            const img = { ...image, name: image.fileName || image.uri.split("/")[image.uri.split("/").length - 1], uri: image.uri, type: image.type }
-            formData.append("image", img)
-        }
-        formData.append("name", name)
+        const img = image.uri ? { ...image, name: image.fileName || image.uri.split("/")[image.uri.split("/").length - 1], uri: image.uri, type: image.type } : ""
+        formData.append("image", img)
+        formData.append("username", name)
         formData.append("email", email)
         formData.append("password", password)
         formData.append("confirmPassword", confirmPassword)
@@ -105,7 +103,7 @@ class SignUp extends Component {
                         overflow: "hidden"
                     }}>
                     {image.uri ?
-                        <Image source={image} style={{ width: "100%", height: "100%", borderRadius: 50, resizeMode: "contain" }} />
+                        <Image source={image} style={{ width: "100%", height: "100%", borderRadius: 50, resizeMode: "cover" }} />
                         :
                         <Text>Image</Text>
                     }
@@ -114,27 +112,27 @@ class SignUp extends Component {
                     value={name}
                     onChangeText={name => this.setState({ name })}
                     placeholder="User Name"
-                    style={{ borderBottomWidth: 1 }}
+                    style={{ borderBottomWidth: 1, paddingVertical: 20 }}
                 />
                 <TextInput
                     value={email}
                     onChangeText={email => this.setState({ email })}
                     placeholder="Email"
-                    style={{ borderBottomWidth: 1 }}
+                    style={{ borderBottomWidth: 1, paddingVertical: 20 }}
                 />
                 <TextInput
                     value={password}
                     onChangeText={password => this.setState({ password })}
                     placeholder="Password"
                     secureTextEntry={true}
-                    style={{ borderBottomWidth: 1 }}
+                    style={{ borderBottomWidth: 1, paddingVertical: 20 }}
                 />
                 <TextInput
                     value={confirmPassword}
                     onChangeText={confirmPassword => this.setState({ confirmPassword })}
                     secureTextEntry={true}
                     placeholder="Confirm Password"
-                    style={{ borderBottomWidth: 1 }}
+                    style={{ borderBottomWidth: 1, paddingVertical: 20 }}
                 />
                 <TouchableOpacity onPress={this.signup} style={{ marginTop: 30, borderRadius: 5, backgroundColor: "gray", paddingVertical: 10, paddingHorizontal: 20, alignSelf: "center" }}>
                     <Text style={{ fontSize: 20, color: "white" }}>Sign Up</Text>

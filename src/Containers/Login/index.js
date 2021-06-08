@@ -48,14 +48,14 @@ class Login extends Component {
                     value={email}
                     onChangeText={email => this.setState({ email })}
                     placeholder="Email"
-                    style={{ borderBottomWidth: 1 }}
+                    style={{ borderBottomWidth: 1, paddingVertical: 20 }}
                 />
                 <TextInput
                     value={password}
                     onChangeText={password => this.setState({ password })}
                     placeholder="Password"
                     secureTextEntry={true}
-                    style={{ borderBottomWidth: 1 }}
+                    style={{ borderBottomWidth: 1, paddingVertical: 20 }}
                 />
                 <TouchableOpacity onPress={this.login} style={{ marginTop: 30, borderRadius: 5, backgroundColor: "gray", paddingVertical: 10, paddingHorizontal: 20, alignSelf: "center" }}>
                     <Text style={{ fontSize: 20, color: "white" }}>Login</Text>
