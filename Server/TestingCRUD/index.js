@@ -1,3 +1,46 @@
+
+// let testAccount;
+// nodemailer.createTestAccount()
+//     .then((account) => {
+//         testAccount = account
+//         console.log("user", testAccount.user)
+//         console.log("pass", testAccount.pass)
+//         // host: "smtp.ethereal.email", host for testing account
+//     })
+
+
+// mongoose.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.rmqbj.mongodb.net/Auth?retryWrites=true&w=majority`, {
+//     useNewUrlParser: true,
+//     useUnifiedTopology: true
+// })
+//     .then((Auth) => {
+//         const AuthSchema = Auth.Schema
+//         const UsersSchema = new AuthSchema({
+//             email: {
+//                 type: String,
+//                 required: true
+//             },
+//             username: {
+//                 type: String,
+//                 required: true
+//             },
+//             password: {
+//                 type: String,
+//                 required: true
+//             },
+//             confirmPassword:{
+//                 type: String,
+//                 required: true
+//             }
+
+//         })
+//         Users = mongoose.model('Users', UsersSchema);
+//         console.log('Connected to Database')
+//     })
+//     .catch((err) => {
+//         return console.error(err)
+//     })
+
 let messagesCollection;
 MongoDB.MongoClient.connect(connectionString, {
     useUnifiedTopology: true
