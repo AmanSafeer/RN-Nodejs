@@ -55,6 +55,8 @@ class SignUp extends Component {
         const { navigation: { navigate } } = this.props
 
         const formData = new FormData()
+        // const video = image.uri ? { ...image, name: image.fileName || image.uri.split("/")[image.uri.split("/").length - 1], uri: image.uri, type: `video/${image.uri.split(".")[2]}`} : ""
+        // formData.append("image", video)
         const img = image.uri ? { ...image, name: image.fileName || image.uri.split("/")[image.uri.split("/").length - 1], uri: image.uri, type: image.type } : ""
         formData.append("image", img)
         formData.append("username", name)
