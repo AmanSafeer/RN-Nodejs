@@ -10,7 +10,9 @@ const connectDB = () => {
     })
         .then((client) => {
             const AuthDb = client.db("Auth")
+            const DashboardDb =  client.db("Dashboard")
             Collection["Users"] = AuthDb.collection("Users")
+            Collection["Messages"] = DashboardDb.collection("Messages")
             console.log('Connected to Database')
         })
         .catch((err) => {
