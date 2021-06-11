@@ -12,7 +12,10 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '/public')));
 
 const AuthRoute = require("./routes/Auth")
+const ReportRoute = require("./routes/Report")
+
 app.use("/", AuthRoute)
+app.use("/", ReportRoute)
 
 app.listen(process.env.SERVER_PORT, function () {
     console.log('listening on ' + process.env.SERVER_PORT)

@@ -1,5 +1,5 @@
 const nodemailer = require("nodemailer");
-const multer = require('multer')
+const multer = require('multer');
 
 const Transport = async () => {
     try {
@@ -34,7 +34,52 @@ const storage = multer.diskStorage({
     }
 })
 
+const PdfCreator = (html) => {
+    const options = {
+        format: "A3",
+        orientation: "portrait",
+        border: "10mm",
+        header: {
+            height: "45mm",
+            contents: '<div style="text-align: center;">Report</div>'
+        },
+        footer: {
+            height: "28mm",
+            contents: {
+                // first: 'Cover page',
+                1: "First page", // Any page number is working. 1-based index
+                default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>', // fallback value
+                last: 'Last Page'
+            }
+        }
+    }
+
+    var users = [
+        {
+            name: "Shyam",
+            age: "26",
+        },
+        {
+            name: "Navjot",
+            age: "26",
+        },
+        {
+            name: "Vitthal",
+            age: "26",
+        },
+    ]
+
+    const document = {
+        html,
+        data: users,
+        path: "./public/reports/report.pdf",
+    }
+
+    return { document, options }
+}
+
 module.exports = {
     Transport,
-    storage
+    storage,
+    PdfCreator
 }
