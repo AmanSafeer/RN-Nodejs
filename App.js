@@ -17,15 +17,15 @@ import RootStack from './src';
 
 const App = () => {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor:"white" }} >
-      <StatusBar barStyle="dark-content" backgroundColor="white"/>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }} >
+      <StatusBar barStyle="dark-content" backgroundColor="white" />
       {
         Platform.OS == "ios" ?
-        <KeyboardAvoidingView style={{flex:1}} behavior="padding">
-          <RootStack/>
-        </KeyboardAvoidingView>
-        :
-        <RootStack/>
+          <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+            <RootStack />
+          </KeyboardAvoidingView>
+          :
+          <RootStack />
       }
     </SafeAreaView>
   );
