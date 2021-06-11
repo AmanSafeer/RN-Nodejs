@@ -30,7 +30,7 @@ class Login extends Component {
             .then(res => {
                 console.log(res)
                 AsyncStorage.setItem("user", JSON.stringify(res.data))
-                replace("Profile")
+                replace("Messages")
             })
             .catch(err => {
                 alert(err.response.data.error)

@@ -1,7 +1,7 @@
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 import {
-    SignUp, VerificationCode, Login, Profile
+    SignUp, VerificationCode, Login, Profile, Messages
 } from './Containers';
 
 
@@ -11,6 +11,7 @@ const RootStack = createAppContainer(createStackNavigator({
     VerificationCode: { screen: VerificationCode },
     Login: { screen: Login },
     Profile: { screen: Profile },
+    Messages: { screen: Messages }
 },
     {
         initialRouteName: 'Login',
