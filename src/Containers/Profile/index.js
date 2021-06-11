@@ -24,6 +24,7 @@ class Profile extends Component {
             imagePickerModal: false,
             user: {},
             image: { uri: "" },
+            pre_image: ""
         }
     }
 
@@ -53,12 +54,18 @@ class Profile extends Component {
     }
 
     updateProfile = () => {
-        const { username, user, image } = this.state
+        const { username, user, image, pre_image } = this.state
 
         const formData = new FormData()
         const img = (image.uri && image.fileName) ? { ...image, name: image.fileName || image.uri.split("/")[image.uri.split("/").length - 1], uri: image.uri, type: image.type } : ""
+
         formData.append("image", img)
         formData.append("username", username)
+
+        if (pre_image) {
+            const pre_img = pre_image.split("/")[pre_image.split("/").length - 1]
+            formData.append("pre_image", JSON.stringify([pre_img.split(".")[0], pre_img.split(".")[1]]))
+        }
 
         Axios.put(
             `${Variables.baseUrl}/update_profile`,
@@ -74,7 +81,7 @@ class Profile extends Component {
             .then(res => {
                 console.log("update response", res)
                 alert(res.data.message)
-                this.setState({ edit: false }, () => {
+                this.setState({ pre_image: "", edit: false }, () => {
                     this.getProfile()
                 })
             })
@@ -163,6 +170,9 @@ class Profile extends Component {
                     onRequestClose={() => { this.setState({ imagePickerModal: false }) }}
                     onPressCamera={this.openCamera}
                     onPressGallery={this.openGallery}
+                    onPressRemove={() => { this.setState({ pre_image: image.fileName ? "" : image.uri, image: { uri: "" } }) }}
+                    deleteBtn={image.uri}
+
                 />
             </View>
 

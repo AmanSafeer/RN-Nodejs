@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Modal, Platform } from 'react-native';
 
 
-export const ImagePickerModal = ({ visible, onRequestClose, onPressCamera, onPressGallery }) => {
+export const ImagePickerModal = ({ visible, onRequestClose, onPressCamera, onPressGallery, onPressRemove, deleteBtn }) => {
   return (
 
     <Modal
@@ -38,10 +38,23 @@ export const ImagePickerModal = ({ visible, onRequestClose, onPressCamera, onPre
               onRequestClose()
               setTimeout(() => { onPressGallery() }, Platform.OS == "ios" ? 400 : 0)
             }}
-            style={{ paddingVertical: 20, paddingHorizontal: 10 }}
+            style={{ borderBottomWidth: deleteBtn ? 1 : 0, borderBottomColor: "lightgray", paddingVertical: 20, paddingHorizontal: 10 }}
           >
             <Text style={{ textAlign: "center" }}>Choose Photo from Library</Text>
           </TouchableOpacity>
+          {deleteBtn ?
+            <TouchableOpacity
+              onPress={() => {
+                onPressRemove()
+                onRequestClose()
+              }}
+              style={{ borderBottomWidth: 1, borderBottomColor: "lightgray", paddingVertical: 20, paddingHorizontal: 10 }}
+            >
+              <Text style={{ textAlign: "center" }}>Delete Photo</Text>
+            </TouchableOpacity>
+            :
+            null
+          }
         </View>
       </TouchableOpacity>
     </Modal>

@@ -125,7 +125,7 @@ const verify_code = async (req, res) => {
 
 const update_profile = async (req, res) => {
     try {
-        const { username } = req.body
+        const { username, pre_image } = req.body
         const { _id, access_token } = req.headers
         const user = await db("Users").findOne({ _id: MongoDB.ObjectId(_id) })
         if (user.token != access_token)
@@ -148,12 +148,17 @@ const update_profile = async (req, res) => {
             {
                 $set: {
                     username,
-                    image_url: req?.file?.filename ? `images/${req.file.filename}` : user.image_url,
-                    thumb_image_url: req?.file?.filename ? `images/${req.file.filename.split(".")[0]}_thumb.png` : user.thumb_image_url
+                    image_url: req?.file?.filename ? `images/${req.file.filename}` : pre_image ? "" : user.image_url,
+                    thumb_image_url: req?.file?.filename ? `images/${req.file.filename.split(".")[0]}_thumb.png` : pre_image ? "" : user.thumb_image_url
                 }
             }
         )
         if (updateUser.result.ok) {
+            if (pre_image) {
+                const img = JSON.parse(pre_image)
+                fs.unlink((`./public/images/${img[0]}.${img[1]}`), (err) => { })
+                fs.unlink((`./public/images/${img[0]}_thumb.png`), (err) => { })
+            }
             return res.send({ message: "Profile has been updated" })
         }
     }
