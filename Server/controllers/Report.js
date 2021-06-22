@@ -1,11 +1,25 @@
 var pdf = require("pdf-creator-node");
 var fs = require("fs");
-var html = fs.readFileSync("./views/report.html", "utf8");
-const { document, options } = require("../config/utils").PdfCreator(html)
-
+var html = fs.readFileSync("./views/report.hbs", "utf8");
+const { PdfCreator } = require("../config/utils")
 
 const get_report = async (req, res) => {
     try {
+        var users = [
+            {
+                name: "Shyam",
+                age: "26",
+            },
+            {
+                name: "Navjot",
+                age: "26",
+            },
+            {
+                name: "",
+                age: "26",
+            },
+        ]
+        const { document, options } = PdfCreator(html, { users })
         const file = await pdf.create(document, options)
         console.log(file);
         return res.send({ report_url: file.filename })

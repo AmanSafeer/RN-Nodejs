@@ -34,9 +34,9 @@ const storage = multer.diskStorage({
     }
 })
 
-const PdfCreator = (html) => {
+const PdfCreator = (html, data) => {
     const options = {
-        format: "A3",
+        format: "A4",
         orientation: "portrait",
         border: "10mm",
         header: {
@@ -53,25 +53,9 @@ const PdfCreator = (html) => {
             }
         }
     }
-
-    var users = [
-        {
-            name: "Shyam",
-            age: "26",
-        },
-        {
-            name: "Navjot",
-            age: "26",
-        },
-        {
-            name: "Vitthal",
-            age: "26",
-        },
-    ]
-
     const document = {
         html,
-        data: users,
+        data,
         path: "./public/reports/report.pdf",
     }
 
