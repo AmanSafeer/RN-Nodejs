@@ -5,7 +5,8 @@ import {
     TextInput,
     TouchableOpacity,
     FlatList,
-    Image
+    Image,
+    ActivityIndicator
 } from 'react-native';
 import Axios from "axios";
 import { Variables } from '../../config';
@@ -24,7 +25,8 @@ class Profile extends Component {
             imagePickerModal: false,
             user: {},
             image: { uri: "" },
-            pre_image: ""
+            pre_image: "",
+            loader: false
         }
     }
 
@@ -40,6 +42,7 @@ class Profile extends Component {
 
     getProfile = () => {
         const { user } = this.state
+        this.setState({ loader: true })
         Axios.get(
             `${Variables.baseUrl}/get_profile`,
             { headers: { access_token: user.token, _id: user._id } }
@@ -47,9 +50,12 @@ class Profile extends Component {
             .then(res => {
                 console.log("get response", res)
                 const { email, username, image_url } = res.data
-                this.setState({ email, username, image: { uri: image_url ? `${Variables.baseUrl}/${image_url}` : "" } })
+                this.setState({ loader: false, email, username, image: { uri: image_url ? `${Variables.baseUrl}/${image_url}` : "" } })
             })
-            .catch(err => console.log(err.response))
+            .catch(err => {
+                console.log(err.response)
+                this.setState({ loader: false })
+            })
 
     }
 
@@ -66,7 +72,7 @@ class Profile extends Component {
             const pre_img = pre_image.split("/")[pre_image.split("/").length - 1]
             formData.append("pre_image", JSON.stringify([pre_img.split(".")[0], pre_img.split(".")[1]]))
         }
-
+        this.setState({ loader: true })
         Axios.put(
             `${Variables.baseUrl}/update_profile`,
             formData,
@@ -88,6 +94,7 @@ class Profile extends Component {
             .catch(err => {
                 alert(err.response.data.error)
                 console.log(err.response)
+                this.setState({ loader: false })
             })
     }
 
@@ -116,65 +123,70 @@ class Profile extends Component {
     }
 
     render() {
-        const { username, email, edit, imagePickerModal, image } = this.state
+        const { username, email, edit, imagePickerModal, image, loader } = this.state
         const { navigation: { navigate } } = this.props
         return (
-            <View style={{ flex: 1, width: "100%", paddingHorizontal: 20 }}>
-                <Text style={{ textAlign: "center", fontWeight: "bold", fontSize: 20, paddingVertical: 30 }}>Profile</Text>
-                <TouchableOpacity
-                    activeOpacity={edit ? 0 : 1}
-                    onPress={() => { edit ? this.setState({ imagePickerModal: true }) : null }}
-                    style={{
-                        width: 100,
-                        height: 100,
-                        backgroundColor: "gray",
-                        borderRadius: 50,
-                        alignSelf: "center",
-                        marginTop: 20,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        overflow: "hidden"
-                    }}>
-                    {image.uri ?
-                        <Image source={image} style={{ width: 100, height: 100, borderRadius: 50, resizeMode: "cover" }} />
+            loader ?
+                <View style={{ flex: 1, width: "100%", justifyContent: "center", alignItems: "center" }}>
+                    <ActivityIndicator color="black" size="small" />
+                </View>
+                :
+                <View style={{ flex: 1, width: "100%", paddingHorizontal: 20 }}>
+                    <Text style={{ textAlign: "center", fontWeight: "bold", fontSize: 20, paddingVertical: 30 }}>Profile</Text>
+                    <TouchableOpacity
+                        activeOpacity={edit ? 0 : 1}
+                        onPress={() => { edit ? this.setState({ imagePickerModal: true }) : null }}
+                        style={{
+                            width: 100,
+                            height: 100,
+                            backgroundColor: "gray",
+                            borderRadius: 50,
+                            alignSelf: "center",
+                            marginTop: 20,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            overflow: "hidden"
+                        }}>
+                        {image.uri ?
+                            <Image source={image} style={{ width: 100, height: 100, borderRadius: 50, resizeMode: "cover" }} />
+                            :
+                            <Text>Image</Text>
+                        }
+                    </TouchableOpacity>
+                    <TextInput
+                        value={username}
+                        onChangeText={username => this.setState({ username })}
+                        placeholder="User Name"
+                        style={{ borderBottomWidth: 1, paddingVertical: 20, borderBottomColor: edit ? "black" : "lightgray", color: edit ? "black" : "gray" }}
+                        editable={edit}
+                    />
+                    <TextInput
+                        value={email}
+                        onChangeText={email => this.setState({ email })}
+                        placeholder="Email"
+                        style={{ borderBottomWidth: 1, paddingVertical: 20, borderBottomColor: "lightgray", color: "gray" }}
+                        editable={false}
+                    />
+                    {edit ?
+                        <TouchableOpacity onPress={this.updateProfile} style={{ marginTop: 30, borderRadius: 5, backgroundColor: "gray", paddingVertical: 10, paddingHorizontal: 20, alignSelf: "center" }}>
+                            <Text style={{ fontSize: 20, color: "white" }}>Update</Text>
+                        </TouchableOpacity>
                         :
-                        <Text>Image</Text>
+                        <TouchableOpacity onPress={() => this.setState({ edit: true })} style={{ marginTop: 30, borderRadius: 5, backgroundColor: "gray", paddingVertical: 10, paddingHorizontal: 20, alignSelf: "center" }}>
+                            <Text style={{ fontSize: 20, color: "white" }}>Edit</Text>
+                        </TouchableOpacity>
                     }
-                </TouchableOpacity>
-                <TextInput
-                    value={username}
-                    onChangeText={username => this.setState({ username })}
-                    placeholder="User Name"
-                    style={{ borderBottomWidth: 1, paddingVertical: 20, borderBottomColor: edit ? "black" : "lightgray", color: edit ? "black" : "gray" }}
-                    editable={edit}
-                />
-                <TextInput
-                    value={email}
-                    onChangeText={email => this.setState({ email })}
-                    placeholder="Email"
-                    style={{ borderBottomWidth: 1, paddingVertical: 20, borderBottomColor: "lightgray", color: "gray" }}
-                    editable={false}
-                />
-                {edit ?
-                    <TouchableOpacity onPress={this.updateProfile} style={{ marginTop: 30, borderRadius: 5, backgroundColor: "gray", paddingVertical: 10, paddingHorizontal: 20, alignSelf: "center" }}>
-                        <Text style={{ fontSize: 20, color: "white" }}>Update</Text>
-                    </TouchableOpacity>
-                    :
-                    <TouchableOpacity onPress={() => this.setState({ edit: true })} style={{ marginTop: 30, borderRadius: 5, backgroundColor: "gray", paddingVertical: 10, paddingHorizontal: 20, alignSelf: "center" }}>
-                        <Text style={{ fontSize: 20, color: "white" }}>Edit</Text>
-                    </TouchableOpacity>
-                }
 
-                <ImagePickerModal
-                    visible={imagePickerModal}
-                    onRequestClose={() => { this.setState({ imagePickerModal: false }) }}
-                    onPressCamera={this.openCamera}
-                    onPressGallery={this.openGallery}
-                    onPressRemove={() => { this.setState({ pre_image: image.fileName ? "" : image.uri, image: { uri: "" } }) }}
-                    deleteBtn={image.uri}
+                    <ImagePickerModal
+                        visible={imagePickerModal}
+                        onRequestClose={() => { this.setState({ imagePickerModal: false }) }}
+                        onPressCamera={this.openCamera}
+                        onPressGallery={this.openGallery}
+                        onPressRemove={() => { this.setState({ pre_image: image.fileName ? "" : image.uri, image: { uri: "" } }) }}
+                        deleteBtn={image.uri}
 
-                />
-            </View>
+                    />
+                </View>
 
         )
     }
