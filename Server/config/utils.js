@@ -5,7 +5,10 @@ const Transport = async () => {
     try {
         let transport = await nodemailer.createTransport(
             {
-                service: "Gmail",
+                // service: "Gmail",
+                host: "smtp.gmail.com",
+                port: 587,
+                secure: false,
                 auth: {
                     user: process.env.EMAIL_USER,
                     pass: process.env.EMAIL_PASS,
@@ -15,6 +18,9 @@ const Transport = async () => {
                     // refreshToken: process.env.REFRESHTOKEN,
                     // accessToken: process.env.ACCESSTOKEN
                 },
+                tls: {
+                    rejectUnauthorized: false
+                }
             }
         )
         return transport
