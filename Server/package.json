@@ -23,5 +23,8 @@
     "nodemon": "^2.0.7",
     "pdf-creator-node": "^2.2.2",
     "sharp": "^0.28.3"
+  },
+  "engines": {
+    "node": "15.x"
   }
 }
